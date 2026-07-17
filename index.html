@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Cargas - Sistema Logístico</title>
+  <!-- Link do Google Fonts para uma tipografia limpa e moderna -->
+  <link href="https://googleapis.com" rel="stylesheet">
+  
+  <style>
+    /* --- CONFIGURAÇÕES GERAIS & DESIGN ROXO/NU-STYLE --- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+    body {
+      background-color: #f4f5f7;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 15px;
+    }
+    .app-container {
+      width: 100%;
+      max-width: 1200px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      overflow: hidden;
+      min-height: 550px;
+      display: flex;
+      flex-direction: column;
+    }
+    .screen {
+      display: none; /* Oculta todas as telas por padrão */
+      padding: 30px;
+      flex-direction: column;
+      flex: 1;
+    }
+    .screen.active {
+      display: flex; /* Mostra apenas a tela ativa */
+    }
+    
+    /* --- ESTILOS DE FORMULÁRIO (PADRÃO DO PRINT REF) --- */
+    .auth-wrapper {
+      max-width: 400px;
+      width: 100%;
+      margin: auto;
+      text-align: center;
+    }
+    .brand-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #8A05BE; /* Roxo Vivo/Nu de referência */
+      margin-bottom: 8px;
+    }
+    .brand-subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 30px;
+    }
+    .form-group {
+      text-align: left;
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 14px;
+      border: 1px solid #ddd;
+      border-radius: 12px; /* Cantos bem arredondados como na Ref */
+      background-color: #fafafa;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+    .form-control:focus {
+      border-color: #8A05BE;
+      background-color: #fff;
+      box-shadow: 0 0 0 3px rgba(138, 5, 190, 0.1);
+    }
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+      background-color: #8A05BE; /* Botão Roxo Destacado */
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-top: 10px;
+    }
+    .btn-primary:hover {
+      background-color: #70049E;
+    }
+    .auth-footer {
+      margin-top: 25px;
+      font-size: 13px;
+      color: #666;
+    }
+    .auth-footer a {
+      color: #8A05BE;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .auth-footer a:hover {
+      text-decoration: underline;
+    }
+    .alert-msg {
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 15px;
+      display: none;
+    }
+    .alert-danger { background-color: #fde8e8; color: #e02424; }
+    .alert-success { background-color: #def7ec; color: #03543f; }
+
+
+      /* --- ESTILOS ADICIONAIS DO PAINEL PRINCIPAL (TELA 3) --- */
+    .main-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background: #8A05BE;
+      color: white;
+      border-radius: 16px 16px 0 0;
+    }
+    .main-header .logo-area h2 {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .main-header .logo-area span {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+    .user-info-bar {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 14px;
+    }
+    .btn-logout {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      padding: 8px 14px;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.3); }
+    
+    /* Layout de 3 colunas responsivo */
+    .panel-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr 280px;
+      gap: 20px;
+      padding: 20px;
+      flex: 1;
+      background: #f8f9fa;
+    }
+    .panel-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+      display: flex;
+      flex-direction: column;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #f1f1f1;
+      padding-bottom: 6px;
+    }
+    
+    /* Lista de Romaneios Central */
+    .search-box-wrapper {
+      position: relative;
+      margin-bottom: 15px;
+    }
+    .romaneio-list-container {
+      flex: 1;
+      overflow-y: auto;
+      max-height: 350px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fafafa;
+    }
+    .romaneio-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+    .romaneio-item:last-child { border-bottom: none; }
+    .romaneio-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #8A05BE;
+      cursor: pointer;
+    }
+    .actions-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .btn-secondary {
+      background: #e9ecef;
+      color: #495057;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 1;
+      transition: background 0.2s;
+    }
+    .btn-secondary:hover { background: #dee2e6; }
+    
+    /* Painel Direita - Consultas */
+    .btn-monitor {
+      background: #00E676; /* Verde neon / destaque para monitorar */
+      color: #004D40;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .btn-monitor:hover { background: #00C853; }
+    .result-box {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      background: #f1f3f5;
+      display: none;
+    }
+
+    /* Responsividade para Tablets e Mobiles */
+    @media (max-width: 992px) {
+      .panel-grid { grid-template-columns: 1fr; }
+      .main-header { flex-direction: column; gap: 15px; text-align: center; }
+      .user-info-bar { flex-direction: column; gap: 8px; }
+    }
+    
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- TELA 1: LOGIN -->
+    <div id="screen-login" class="screen active">
+      <div class="auth-wrapper">
+        <h1 class="brand-title">smart cargas</h1>
+        <p class="brand-subtitle">Painel - Demanda Dispatch v1707.1</p>
+        
+        <div id="login-alert" class="alert-msg alert-danger"></div>
+        
+        <div class="form-group">
+          <label>E-mail ou Matrícula</label>
+          <input type="text" id="login-id" class="form-control" placeholder="exemplo@empresa.com ou 12345">
+        </div>
+        
+        <div class="form-group">
+          <label>Senha de Acesso</label>
+          <input type="password" id="login-pass" class="form-control" placeholder="••••••••">
+        </div>
+        
+        <button class="btn-primary" id="btn-entrar" onclick="executarLogin()">Entrar</button>
+        
+        <div class="auth-footer">
+          <p>Não tem acesso? <a href="#" onclick="mudarTela('screen-register')">Cadastre-se</a></p>
+          <p style="margin-top: 8px;"><a href="mailto:suporte@empresa.com">Suporte / Contato</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- AS OUTRAS TELAS SERÃO ENCAIXADAS AQUI ABAIXO NOS PRÓXIMOS PASSOS -->
+    <!-- TELA 2: CADASTRO DE USUÁRIO -->
+    <div id="screen-register" class="screen">
+      <div class="auth-wrapper" style="max-width: 500px;"> <!-- Um pouco mais larga para acomodar melhor os campos -->
+        <h1 class="brand-title">smart cargas</h1>
+        <p class="brand-subtitle">Criar Novo Acesso Operacional</p>
+        
+        <div id="register-alert" class="alert-msg"></div>
+        
+        <div class="form-group">
+          <label>Nome Completo</label>
+          <input type="text" id="reg-nome" class="form-control" placeholder="Digite seu nome completo">
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+          <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <label>Matrícula / RE</label>
+            <input type="text" id="reg-matricula" class="form-control" placeholder="123456">
+          </div>
+          <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <label>E-mail Corporativo</label>
+            <input type="email" id="reg-email" class="form-control" placeholder="nome@empresa.com">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+          <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <label>Empresa / Vínculo</label>
+            <select id="reg-empresa" class="form-control">
+              <option value="">Selecione...</option>
+              <option value="Vivo">Vivo</option>
+              <option value="Terceirizado">Terceirizado</option>
+              <option value="Parceiro">Parceiro</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <label>Regional</label>
+            <select id="reg-regional" class="form-control">
+              <option value="">Selecione...</option>
+              <option value="SP">São Paulo (SP)</option>
+              <option value="RJ">Rio de Janeiro (RJ)</option>
+              <option value="MG">Minas Gerais (MG)</option>
+              <option value="SUL">Sul</option>
+              <option value="NORDESTE">Nordeste</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-bottom: 25px;">
+          <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <label>Senha</label>
+            <input type="password" id="reg-senha" class="form-control" placeholder="••••••••">
+          </div>
+          <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <label>Repita a Senha</label>
+            <input type="password" id="reg-senha2" class="form-control" placeholder="••••••••">
+          </div>
+        </div>
+        
+        <button class="btn-primary" id="btn-cadastrar" onclick="executarCadastro()">Cadastrar</button>
+        
+        <div class="auth-footer">
+          <p>Já possui cadastro? <a href="#" onclick="mudarTela('screen-login')">Voltar para o Login</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELA 3: PAINEL PRINCIPAL (MAIN) -->
+    <div id="screen-main" class="screen" style="padding: 0;">
+      
+      <!-- HEADER DO SISTEMA -->
+      <div class="main-header">
+        <div class="logo-area">
+          <h2>smart cargas vivo</h2>
+          <span>Controle de Warehouse & Dispatch</span>
+        </div>
+        <div class="user-info-bar">
+          <div id="user-display-details">
+            <!-- Preenchido via JS dinamicamente -->
+          </div>
+          <button class="btn-logout" onclick="executarLogout()">Sair do Sistema</button>
+        </div>
+      </div>
+      
+      <!-- GRID DE GERENCIAMENTO (3 COLUNAS) -->
+      <div class="panel-grid">
+        
+        <!-- COLUNA ESQUERDA: FILTROS -->
+        <div class="panel-card">
+          <div class="card-title">Filtros de Seleção</div>
+          
+          <div class="form-group">
+            <label>Fornecedor (Fornec_Last)</label>
+            <select id="filtro-fornecedor" class="form-control" onchange="filtrarListaLocal()">
+              <option value="Todos">Todos</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Transportador (Transp)</label>
+            <select id="filtro-transportador" class="form-control" onchange="filtrarListaLocal()">
+              <option value="Todos">Todos</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Romaneio Específico</label>
+            <select id="filtro-romaneio" class="form-control" onchange="filtrarListaLocal()">
+              <option value="Todos">Todos</option>
+            </select>
+          </div>
+          
+          <button class="btn-secondary" style="margin-top: auto;" onclick="resetarFiltros()">Limpar Filtros</button>
+        </div>
+        
+        <!-- COLUNA CENTRAL: GESTÃO DE PEDIDOS -->
+        <div class="panel-card">
+          <div class="card-title">Pedidos sem Dispatch (Pendentes)</div>
+          
+          <div class="search-box-wrapper">
+            <input type="text" id="busca-central" class="form-control" placeholder="🔍 Buscar por número de romaneio..." oninput="filtrarListaLocal()">
+          </div>
+          
+          <!-- Item para selecionar todos de uma vez -->
+          <div class="romaneio-item" style="background: #e9ecef; border-radius: 8px; margin-bottom: 8px; font-weight: 600;">
+            <input type="checkbox" id="chk-selecionar-todos" onchange="alternarTodosCheckboxes(this)">
+            <label for="chk-selecionar-todos" style="cursor:pointer; width:100%;">Selecionar Todos</label>
+          </div>
+          
+          <!-- Lista alimentada dinamicamente -->
+          <div class="romaneio-list-container" id="lista-romaneios-corpo">
+            <p style="text-align: center; color: #888; margin-top: 20px;">Nenhum romaneio carregado.</p>
+          </div>
+          
+          <div class="actions-row">
+            <button class="btn-secondary" onclick="copiarSelecao()">Copiar Seleção</button>
+            <button class="btn-primary" style="margin-top:0; flex: 1.5;" onclick="confirmarDispatchSelecionados()">Confirmar Dispatch</button>
+          </div>
+        </div>
+        
+        <!-- COLUNA DIREITA: AÇÕES E CONSULTAS -->
+        <div class="panel-card">
+          <div class="card-title">Ações Rápidas</div>
+          <button class="btn-primary btn-monitor" onclick="alert('Redirecionando para o Monitoramento em Tempo Real...')">📡 Monitorar Carga</button>
+          
+          <div class="card-title" style="margin-top: 15px;">Consultar Dispatch</div>
+          <div class="search-box-wrapper">
+            <input type="text" id="busca-consulta-direita" class="form-control" placeholder="Digite o número do Romaneio">
+          </div>
+          <button class="btn-secondary" style="width: 100%;" onclick="executarConsultaDireita()">Consultar Status</button>
+          
+          <!-- Caixa para exibir resultado da consulta -->
+          <div id="resultado-consulta-direita" class="result-box"></div>
+        </div>
+        
+      </div>
+    </div>
+
+    
+
+  </div>
+
+  <script>
+
+    // --- JAVASCRIPT PARTE 1: NAVEGAÇÃO E LOGIN ---
+    let usuarioLogado = null; 
+    let romaneiosGlobais = []; // Guarda a lista vinda do banco para filtros rápidos
+
+    // Função para alternar entre as 3 telas
+    function mudarTela(idTela) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(idTela).classList.add('active');
+    }
+
+    // TELA 1: Executar Login integrando com o Google Sheets
+    function executarLogin() {
+      const loginId = document.getElementById('login-id').value;
+      const loginPass = document.getElementById('login-pass').value;
+      const alertBox = document.getElementById('login-alert');
+      const btn = document.getElementById('btn-entrar');
+
+      if (!loginId || !loginPass) {
+        alertBox.textContent = 'Por favor, preencha todos os campos.';
+        alertBox.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Autenticando...';
+      alertBox.style.display = 'none';
+
+      // Chama a função correspondente no Código.gs do backend
+      google.script.run
+        .withSuccessHandler(function(response) {
+          btn.disabled = false;
+          btn.textContent = 'Entrar';
+          
+          if (response.success) {
+            usuarioLogado = response.usuario;
+            // Atualiza o header com os dados da aba ACESSOS
+            document.getElementById('user-display-details').innerHTML = `
+              <strong>Usuário:</strong> ${usuarioLogado.nome} | 
+              <strong>RE:</strong> ${usuarioLogado.matricula} | 
+              <strong>Empresa:</strong> ${usuarioLogado.empresa}
+            `;
+            mudarTela('screen-main');
+            carregarDadosIniciaisPainel(); // Será definida na Parte 3
+          } else {
+            alertBox.textContent = response.message;
+            alertBox.style.display = 'block';
+          }
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          btn.textContent = 'Entrar';
+          alertBox.textContent = 'Erro na comunicação com o servidor: ' + err.message;
+          alertBox.style.display = 'block';
+        })
+        .autenticarUsuario(loginId, loginPass);
+    }
+
+    function executarLogout() {
+      usuarioLogado = null;
+      romaneiosGlobais = [];
+      document.getElementById('login-id').value = '';
+      document.getElementById('login-pass').value = '';
+      document.getElementById('login-alert').style.display = 'none';
+      mudarTela('screen-login');
+    }
+
+    // --- JAVASCRIPT PARTE 2: CADASTRO DE USUÁRIO ---
+    function executarCadastro() {
+      const nome = document.getElementById('reg-nome').value;
+      const matricula = document.getElementById('reg-matricula').value;
+      const email = document.getElementById('reg-email').value;
+      const empresa = document.getElementById('reg-empresa').value;
+      const regional = document.getElementById('reg-regional').value;
+      const senha = document.getElementById('reg-senha').value;
+      const senha2 = document.getElementById('reg-senha2').value;
+      const alertBox = document.getElementById('register-alert');
+      const btn = document.getElementById('btn-cadastrar');
+
+      // Validação simples de campos obrigatórios
+      if (!nome || !matricula || !email || !empresa || !regional || !senha) {
+        exibirAlertaCadastro('Por favor, preencha todos os campos.', 'danger');
+        return;
+      }
+
+      // Validação de confirmação de senha
+      if (senha !== senha2) {
+        exibirAlertaCadastro('As senhas digitadas não coincidem.', 'danger');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Salvando Registro...';
+
+      const dadosCadastro = {
+        nome: nome,
+        matricula: matricula,
+        email: email,
+        empresa: empresa,
+        regional: regional,
+        senha: senha
+      };
+
+      // Executa a chamada assíncrona ao Google Apps Script Backend
+      google.script.run
+        .withSuccessHandler(function(response) {
+          btn.disabled = false;
+          btn.textContent = 'Cadastrar';
+          
+          if (response.success) {
+            exibirAlertaCadastro(response.message, 'success');
+            limparCamposCadastro();
+            // Retorna ao login após 2 segundos para o usuário acessar o sistema
+            setTimeout(() => {
+              mudarTela('screen-login');
+              alertBox.style.display = 'none';
+            }, 2500);
+          } else {
+            exibirAlertaCadastro(response.message, 'danger');
+          }
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          btn.textContent = 'Cadastrar';
+          exibirAlertaCadastro('Erro interno ao cadastrar: ' + err.message, 'danger');
+        })
+        .registrarUsuario(dadosCadastro);
+    }
+
+    function exibirAlertaCadastro(msg, tipo) {
+      const alertBox = document.getElementById('register-alert');
+      alertBox.textContent = msg;
+      alertBox.className = 'alert-msg ' + (tipo === 'danger' ? 'alert-danger' : 'alert-success');
+      alertBox.style.display = 'block';
+    }
+
+    function limparCamposCadastro() {
+      document.getElementById('reg-nome').value = '';
+      document.getElementById('reg-matricula').value = '';
+      document.getElementById('reg-email').value = '';
+      document.getElementById('reg-empresa').value = '';
+      document.getElementById('reg-regional').value = '';
+      document.getElementById('reg-senha').value = '';
+      document.getElementById('reg-senha2').value = '';
+    }
+
+    // --- JAVASCRIPT PARTE 3: PAINEL PRINCIPAL (MAIN) & EVENTOS ---
+    
+    // 1. Carrega os filtros (Fornecedor, Transportador, Romaneio) e puxa a lista inicial
+    function carregarDadosIniciaisPainel() {
+      const containerLista = document.getElementById('lista-romaneios-corpo');
+      containerLista.innerHTML = '<p style="text-align: center; color: #888; margin-top: 20px;">Carregando dados da warehouse...</p>';
+
+      // Busca os menus em cascata direto das colunas da planilha
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (response.success) {
+            popularDropdown('filtro-fornecedor', response.fornecedores);
+            popularDropdown('filtro-transportador', response.transportadores);
+            popularDropdown('filtro-romaneio', response.romaneios);
+          }
+          // Após carregar os filtros, puxa a listagem de romaneios pendentes
+          atualizarListaRomaneiosServidor();
+        })
+        .carregarFiltrosIniciais();
+    }
+
+    function popularDropdown(idElemento, listaItens) {
+      const select = document.getElementById(idElemento);
+      // Mantém a opção padrão "Todos" e limpa o resto
+      select.innerHTML = '<option value="Todos">Todos</option>';
+      listaItens.forEach(item => {
+        if (item) {
+          const opt = document.createElement('option');
+          opt.value = item;
+          opt.textContent = item;
+          select.appendChild(opt);
+        }
+      });
+    }
+
+    // 2. Busca os romaneios pendentes no servidor sem travar a tela
+    function atualizarListaRomaneiosServidor() {
+      const filtrosEmBranco = { fornecedor: 'Todos', transportador: 'Todos', romaneio: 'Todos', buscaTexto: '' };
+      
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (response.success) {
+            romaneiosGlobais = response.romaneios; // Guarda em memória para busca rápida local
+            renderizarListaRomaneios(romaneiosGlobais);
+          }
+        })
+        .buscarRomaneios(filtrosEmBranco);
+    }
+
+    // 3. Renderiza os itens dinamicamente com checkbox na coluna central
+    function renderizarListaRomaneios(lista) {
+      const container = document.getElementById('lista-romaneios-corpo');
+      document.getElementById('chk-selecionar-todos').checked = false; // Reseta o topo
+
+      if (lista.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #888; margin-top: 20px;">Nenhum romaneio pendente encontrado.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      lista.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'romaneio-item';
+        div.innerHTML = `
+          <input type="checkbox" class="chk-romaneio" value="${item.romaneio}" id="chk-${item.romaneio}">
+          <label for="chk-${item.romaneio}" style="cursor:pointer; width:100%;">
+            <strong>${item.romaneio}</strong> <br>
+            <span style="font-size:11px; color:#777;">Forn: ${item.fornecedor} | Transp: ${item.transportador}</span>
+          </label>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // 4. Filtros instantâneos (Roda local na memória, deixando o app extremamente rápido)
+    function filtrarListaLocal() {
+      const fornecedorSel = document.getElementById('filtro-fornecedor').value;
+      const transportadorSel = document.getElementById('filtro-transportador').value;
+      const romaneioSel = document.getElementById('filtro-romaneio').value;
+      const buscaTexto = document.getElementById('busca-central').value.toLowerCase();
+
+      const listaFiltrada = romaneiosGlobais.filter(item => {
+        if (fornecedorSel !== 'Todos' && item.fornecedor !== fornecedorSel) return false;
+        if (transportadorSel !== 'Todos' && item.transportador !== transportadorSel) return false;
+        if (romaneioSel !== 'Todos' && item.romaneio !== romaneioSel) return false;
+        if (buscaTexto && !item.romaneio.toLowerCase().includes(buscaTexto)) return false;
+        return true;
+      });
+
+      renderizarListaRomaneios(listaFiltrada);
+    }
+
+    // Alternar a seleção de todas as caixas de uma vez
+    function alternarTodosCheckboxes(master) {
+      const checkboxes = document.querySelectorAll('.chk-romaneio');
+      checkboxes.forEach(chk => chk.checked = master.checked);
+    }
+
+    function resetarFiltros() {
+      document.getElementById('filtro-fornecedor').value = 'Todos';
+      document.getElementById('filtro-transportador').value = 'Todos';
+      document.getElementById('filtro-romaneio').value = 'Todos';
+      document.getElementById('busca-central').value = '';
+      renderizarListaRomaneios(romaneiosGlobais);
+    }
+
+    // 5. Copiar para a área de transferência a lista de romaneios marcados
+    function copiarSelecao() {
+      const selecionados = obterRomaneiosSelecionados();
+      if (selecionados.length === 0) {
+        alert('Selecione pelo menos um romaneio para copiar.');
+        return;
+      }
+      const textoParaCopiar = selecionados.join(', ');
+      navigator.clipboard.writeText(textoParaCopiar).then(() => {
+        alert('Romaneios copiados com sucesso: ' + textoParaCopiar);
+      });
+    }
+
+    // 6. Confirma o Dispatch em lote na planilha e gera os logs de auditoria
+    function confirmarDispatchSelecionados() {
+      const selecionados = obterRomaneiosSelecionados();
+      if (selecionados.length === 0) {
+        alert('Por favor, selecione ao menos um romaneio para o dispatch.');
+        return;
+      }
+
+      if (!confirm(`Deseja confirmar o dispatch de ${selecionados.length} romaneio(s)?`)) return;
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (response.success) {
+            alert(response.message);
+            carregarDadosIniciaisPainel(); // Recarrega tudo atualizado da planilha
+          } else {
+            alert('Erro: ' + response.message);
+          }
+        })
+        .confirmarDispatch(selecionados, usuarioLogado);
+    }
+
+    function obterRomaneiosSelecionados() {
+      const checkboxes = document.querySelectorAll('.chk-romaneio:checked');
+      let valores = [];
+      checkboxes.forEach(chk => valores.push(chk.value));
+      return valores;
+    }
+
+    // 7. COLUNA DIREITA: Consultar status atualizado e histórico de logs de um romaneio
+    function ejecutarConsultaDireita() {
+      const romaneioBusca = document.getElementById('busca-consulta-direita').value;
+      const resultadoBox = document.getElementById('resultado-consulta-direita');
+
+      if (!romaneioBusca) {
+        alert('Digite o número do romaneio para consultar.');
+        return;
+      }
+
+      resultadoBox.style.display = 'block';
+      resultadoBox.innerHTML = 'Buscando histórico...';
+      resultadoBox.style.background = '#f1f3f5';
+
+      google.script.run
+        .withSuccessHandler(function(response) {
+          if (!response.success) {
+            resultadoBox.innerHTML = `⚠️ ${response.message}`;
+            resultadoBox.style.background = '#fde8e8';
+            return;
+          }
+
+          if (!response.encontrado) {
+            resultadoBox.innerHTML = `❌ Romaneio não localizado na base.`;
+            resultadoBox.style.background = '#fde8e8';
+            return;
+          }
+
+          if (response.dados.status === 'DESPACHADO') {
+            resultadoBox.style.background = '#def7ec';
+            resultadoBox.innerHTML = `
+              <strong style="color:#03543f;">✓ STATUS: DESPACHADO</strong><br>
+              <strong>Romaneio:</strong> ${response.dados.romaneio}<br>
+              <strong>Fornecedor:</strong> ${response.dados.fornecedor}<br>
+              <strong>Transp:</strong> ${response.dados.transportador}
+            `;
+          } else {
+            resultadoBox.style.background = '#fef08a';
+            resultadoBox.innerHTML = `
+              <strong style="color:#854d0e;">⏳ STATUS: PENDENTE</strong><br>
+              <strong>Romaneio:</strong> ${response.dados.romaneio}<br>
+              <strong>Fornecedor:</strong> ${response.dados.fornecedor}<br>
+              <strong>Transp:</strong> ${response.dados.transportador}
+            `;
+          }
+        })
+        .consultarDispatchRealizado(romaneioBusca);
+    }
+
+  </script>
+</body>
+</html>
