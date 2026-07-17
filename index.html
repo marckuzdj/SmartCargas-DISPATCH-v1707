@@ -70,7 +70,7 @@
     <div id="screen-login" class="screen" style="display: flex; flex-direction: column;">
       <div class="auth-wrapper">
         <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/" alt="SmartCargas VIVO" class="brand-logo">
-        <p class="brand-subtitle">Painel - Demanda Dispatch v1707.15</p>
+        <p class="brand-subtitle">Painel - Demanda Dispatch v1707.16</p>
         
         <div id="login-alert" class="alert-msg alert-danger"></div>
         
@@ -794,6 +794,28 @@ function executarConsultaDireita() {
     });
 }
 
+// --- JAVASCRIPT: CONTROLE DO MODAL DE SUPORTE ---
+function abrirModalSuporte(event) {
+  if (event) event.preventDefault(); // Impede o link de recarregar a página
+  const modal = document.getElementById('modalSuporte');
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+}
+
+function fecharModalSuporte() {
+  const modal = document.getElementById('modalSuporte');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+function fecharAoClicarFora(event) {
+  // Se o clique acontecer no fundo escuro (fora do card de conteúdo), fecha o modal
+  if (event.target.id === 'modalSuporte') {
+    fecharModalSuporte();
+  }
+}
 
   
   </script>
