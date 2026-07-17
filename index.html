@@ -616,424 +616,413 @@
   
   <script>
 
-    // --- JAVASCRIPT PARTE 1: NAVEGAÇÃO E LOGIN ---
-    let usuarioLogado = null; 
-    let romaneiosGlobais = []; // Guarda a lista vinda do banco para filtros rápidos
+// --- CONFIGURAÇÃO DA API EXTERNA ---
+// Cole aqui a URL exata gerada no botão Implantar > Nova Implantação do Google Script
+const URL_API_GOOGLE = "SUA_URL_DO_WEB_APP_DO_GOOGLE_AQUI";
 
-    // Função para alternar entre as 3 telas
-    function mudarTela(idTela) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById(idTela).classList.add('active');
-    }
+let usuarioLogado = null; 
+let romaneiosGlobais = []; 
 
-    // TELA 1: Executar Login integrando com o Google Sheets
-    // REVISÃO DA FUNÇÃO DE LOGIN DA PARTE 1 - INTEGRAÇÃO COM MODAL OTP
-    function executarLogin() {
-      const loginId = document.getElementById('login-id').value;
-      const loginPass = document.getElementById('login-pass').value;
-      const alertBox = document.getElementById('login-alert');
-      const btn = document.getElementById('btn-entrar');
+// Função universal para envio de dados via POST (padrão Rest API)
+async function dispararRequisicaoApi(dadosCorpo) {
+  const resposta = await fetch(URL_API_GOOGLE, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" }, // Evita bloqueio CORS pré-flight
+    body: JSON.stringify(dadosCorpo)
+  });
+  return await resposta.json();
+}
 
-      if (!loginId || !loginPass) {
-        alertBox.textContent = 'Por favor, preencha todos os campos.';
-        alertBox.style.display = 'block';
-        return;
-      }
+// Navegação interna da SPA
+function mudarTela(idTela) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(idTela).classList.add('active');
+}
 
-      btn.disabled = true;
-      btn.textContent = 'Autenticando...';
-      alertBox.style.display = 'none';
+// Rotina de Login via API Externa
+function executarLogin() {
+  const loginId = document.getElementById('login-id').value;
+  const loginPass = document.getElementById('login-pass').value;
+  const alertBox = document.getElementById('login-alert');
+  const btn = document.getElementById('btn-entrar');
 
-      google.script.run
-        .withSuccessHandler(function(response) {
-          btn.disabled = false;
-          btn.textContent = 'Entrar';
-          
-          if (response.success) {
-            // CHECAGEM MANDATÓRIA: Se a coluna OTP não possuir o sufixo " - OK"
-            if (response.precisaOtp) {
-              document.getElementById('hidden-otp-matricula').value = response.matricula;
-              document.getElementById('input-modal-otp').value = '';
-              document.getElementById('otp-modal-alert').style.display = 'none';
-              document.getElementById('otp-modal').style.display = 'flex'; // Abre o modal
-              return;
-            }
+  if (!loginId || !loginPass) {
+    alertBox.textContent = 'Por favor, preencha todos os campos.';
+    alertBox.style.display = 'block';
+    return;
+  }
 
-            // Se já validou o OTP no passado, loga direto
-            logarUsuarioNoPainel(response.usuario);
-          } else {
-            alertBox.textContent = response.message;
-            alertBox.style.display = 'block';
-          }
-        })
-        .withFailureHandler(function(err) {
-          btn.disabled = false;
-          btn.textContent = 'Entrar';
-          alertBox.textContent = 'Erro de rede ou servidor: ' + err.message;
-          alertBox.style.display = 'block';
-        })
-        .autenticarUsuario(loginId, loginPass);
-    }
+  btn.disabled = true;
+  btn.textContent = 'Autenticando...';
+  alertBox.style.display = 'none';
 
-    // NOVA FUNÇÃO: SUBMETE O CÓDIGO DO MODAL PARA O BACKEND VERIFICAR
-    function submeterCodigoOtpModal() {
-      const matricula = document.getElementById('hidden-otp-matricula').value;
-      const codigo = document.getElementById('input-modal-otp').value;
-      const modalAlert = document.getElementById('otp-modal-alert');
-      const btn = document.getElementById('btn-confirmar-otp');
-
-      if (!codigo) {
-        modalAlert.textContent = 'Por favor, insira o código OTP.';
-        modalAlert.style.display = 'block';
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = 'Verificando...';
-      modalAlert.style.display = 'none';
-
-      google.script.run
-        .withSuccessHandler(function(response) {
-          btn.disabled = false;
-          btn.textContent = 'Validar Código';
-          
-          if (response.success) {
-            fecharModalOtp();
-            // Realiza o login definitivo pós-ativação com sucesso
-            logarUsuarioNoPainel(response.usuario);
-          } else {
-            modalAlert.textContent = response.message;
-            modalAlert.style.display = 'block';
-          }
-        })
-        .withFailureHandler(function(err) {
-          btn.disabled = false;
-          btn.textContent = 'Validar Código';
-          modalAlert.textContent = 'Erro ao processar OTP: ' + err.message;
-          modalAlert.style.display = 'block';
-        })
-        .validarCodigoOtp(matricula, codigo);
-    }
-
-    // Auxiliar para preencher as informações da Tela Main
-    function logarUsuarioNoPainel(usuario) {
-      usuarioLogado = usuario;
-      document.getElementById('user-display-details').innerHTML = `
-        <strong>Usuário:</strong> ${usuarioLogado.nome} | 
-        <strong>RE:</strong> ${usuarioLogado.matricula} | 
-        <strong>Empresa:</strong> ${usuarioLogado.empresa}
-      `;
-      mudarTela('screen-main');
-      carregarDadosIniciaisPainel();
-    }
-
-    function fecharModalOtp() {
-      document.getElementById('otp-modal').style.display = 'none';
-    }
-
-
-    function executarLogout() {
-      usuarioLogado = null;
-      romaneiosGlobais = [];
-      document.getElementById('login-id').value = '';
-      document.getElementById('login-pass').value = '';
-      document.getElementById('login-alert').style.display = 'none';
-      mudarTela('screen-login');
-    }
-
-    // --- JAVASCRIPT PARTE 2: CADASTRO DE USUÁRIO ---
-    function executarCadastro() {
-      const nome = document.getElementById('reg-nome').value;
-      const matricula = document.getElementById('reg-matricula').value;
-      const email = document.getElementById('reg-email').value;
-      const empresa = document.getElementById('reg-empresa').value;
-      const regional = document.getElementById('reg-regional').value;
-      const senha = document.getElementById('reg-senha').value;
-      const senha2 = document.getElementById('reg-senha2').value;
-      const alertBox = document.getElementById('register-alert');
-      const btn = document.getElementById('btn-cadastrar');
-
-      // Validação simples de campos obrigatórios
-      if (!nome || !matricula || !email || !empresa || !regional || !senha) {
-        exibirAlertaCadastro('Por favor, preencha todos os campos.', 'danger');
-        return;
-      }
-
-      // Validação de confirmação de senha
-      if (senha !== senha2) {
-        exibirAlertaCadastro('As senhas digitadas não coincidem.', 'danger');
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = 'Salvando Registro...';
-
-      const dadosCadastro = {
-        nome: nome,
-        matricula: matricula,
-        email: email,
-        empresa: empresa,
-        regional: regional,
-        senha: senha
-      };
-
-      // Executa a chamada assíncrona ao Google Apps Script Backend
-      google.script.run
-        .withSuccessHandler(function(response) {
-          btn.disabled = false;
-          btn.textContent = 'Cadastrar';
-          
-          if (response.success) {
-            exibirAlertaCadastro(response.message, 'success');
-            limparCamposCadastro();
-            // Retorna ao login após 2 segundos para o usuário acessar o sistema
-            setTimeout(() => {
-              mudarTela('screen-login');
-              alertBox.style.display = 'none';
-            }, 2500);
-          } else {
-            exibirAlertaCadastro(response.message, 'danger');
-          }
-        })
-        .withFailureHandler(function(err) {
-          btn.disabled = false;
-          btn.textContent = 'Cadastrar';
-          exibirAlertaCadastro('Erro interno ao cadastrar: ' + err.message, 'danger');
-        })
-        .registrarUsuario(dadosCadastro);
-    }
-
-    function exibirAlertaCadastro(msg, tipo) {
-      const alertBox = document.getElementById('register-alert');
-      alertBox.textContent = msg;
-      alertBox.className = 'alert-msg ' + (tipo === 'danger' ? 'alert-danger' : 'alert-success');
-      alertBox.style.display = 'block';
-    }
-
-    function limparCamposCadastro() {
-      document.getElementById('reg-nome').value = '';
-      document.getElementById('reg-matricula').value = '';
-      document.getElementById('reg-email').value = '';
-      document.getElementById('reg-empresa').value = '';
-      document.getElementById('reg-regional').value = '';
-      document.getElementById('reg-senha').value = '';
-      document.getElementById('reg-senha2').value = '';
-    }
-
-    // --- JAVASCRIPT PARTE 3: PAINEL PRINCIPAL (MAIN) & EVENTOS ---
-    
-    // 1. Carrega os filtros (Fornecedor, Transportador, Romaneio) e puxa a lista inicial
-    function carregarDadosIniciaisPainel() {
-      const containerLista = document.getElementById('lista-romaneios-corpo');
-      containerLista.innerHTML = '<p style="text-align: center; color: #888; margin-top: 20px;">Carregando dados da warehouse...</p>';
-
-      // Busca os menus em cascata direto das colunas da planilha
-      google.script.run
-        .withSuccessHandler(function(response) {
-          if (response.success) {
-            popularDropdown('filtro-fornecedor', response.fornecedores);
-            popularDropdown('filtro-transportador', response.transportadores);
-            popularDropdown('filtro-romaneio', response.romaneios);
-          }
-          // Após carregar os filtros, puxa a listagem de romaneios pendentes
-          atualizarListaRomaneiosServidor();
-        })
-        .carregarFiltrosIniciais();
-    }
-
-    function popularDropdown(idElemento, listaItens) {
-      const select = document.getElementById(idElemento);
-      // Mantém a opção padrão "Todos" e limpa o resto
-      select.innerHTML = '<option value="Todos">Todos</option>';
-      listaItens.forEach(item => {
-        if (item) {
-          const opt = document.createElement('option');
-          opt.value = item;
-          opt.textContent = item;
-          select.appendChild(opt);
-        }
-      });
-    }
-
-    // 2. Busca os romaneios pendentes no servidor sem travar a tela
-    function atualizarListaRomaneiosServidor() {
-      const filtrosEmBranco = { fornecedor: 'Todos', transportador: 'Todos', romaneio: 'Todos', buscaTexto: '' };
+  // Consome a rota mapeada no doPost do backend
+  dispararRequisicaoApi({ acao: 'login', loginId: loginId, loginPass: loginPass })
+    .then(response => {
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
       
-      google.script.run
-        .withSuccessHandler(function(response) {
-          if (response.success) {
-            romaneiosGlobais = response.romaneios; // Guarda em memória para busca rápida local
-            renderizarListaRomaneios(romaneiosGlobais);
-          }
-        })
-        .buscarRomaneios(filtrosEmBranco);
+      if (response.success) {
+        if (response.precisaOtp) {
+          document.getElementById('hidden-otp-matricula').value = response.matricula;
+          document.getElementById('input-modal-otp').value = '';
+          document.getElementById('otp-modal-alert').style.display = 'none';
+          document.getElementById('otp-modal').style.display = 'flex';
+          return;
+        }
+        logarUsuarioNoPainel(response.usuario);
+      } else {
+        alertBox.textContent = response.message;
+        alertBox.style.display = 'block';
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+      alertBox.textContent = 'Erro ao conectar na API do Google: ' + err.message;
+      alertBox.style.display = 'block';
+    });
+}
+
+function logarUsuarioNoPainel(usuario) {
+  usuarioLogado = usuario;
+  document.getElementById('user-display-details').innerHTML = `
+    <strong>Usuário:</strong> ${usuarioLogado.nome} | 
+    <strong>RE:</strong> ${usuarioLogado.matricula} | 
+    <strong>Empresa:</strong> ${usuarioLogado.empresa}
+  `;
+  mudarTela('screen-main');
+  carregarDadosIniciaisPainel(); // Será declarada na Parte 3
+}
+
+function executarLogout() {
+  usuarioLogado = null;
+  romaneiosGlobais = [];
+  document.getElementById('login-id').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-alert').style.display = 'none';
+  mudarTela('screen-login');
+}
+
+    // --- JAVASCRIPT PARTE 2: CADASTRO E VALIDAÇÃO DE OTP VIA API ---
+
+// Rotina de Cadastro de Usuário
+function executarCadastro() {
+  const nome = document.getElementById('reg-nome').value;
+  const matricula = document.getElementById('reg-matricula').value;
+  const email = document.getElementById('reg-email').value;
+  const empresa = document.getElementById('reg-empresa').value;
+  const regional = document.getElementById('reg-regional').value;
+  const senha = document.getElementById('reg-senha').value;
+  const senha2 = document.getElementById('reg-senha2').value;
+  const alertBox = document.getElementById('register-alert');
+  const btn = document.getElementById('btn-cadastrar');
+
+  if (!nome || !matricula || !email || !empresa || !regional || !senha) {
+    exibirAlertaCadastro('Por favor, preencha todos os campos.', 'danger');
+    return;
+  }
+
+  if (senha !== senha2) {
+    exibirAlertaCadastro('As senhas digitadas não coincidem.', 'danger');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Salvando Registro...';
+
+  const dadosCadastro = {
+    nome: nome,
+    matricula: matricula,
+    email: email,
+    empresa: empresa,
+    regional: regional,
+    senha: senha
+  };
+
+  // Envia os dados estruturados para a rota de cadastro do doPost backend
+  dispararRequisicaoApi({ acao: 'cadastro', dados: dadosCadastro })
+    .then(response => {
+      btn.disabled = false;
+      btn.textContent = 'Cadastrar';
+      
+      if (response.success) {
+        exibirAlertaCadastro(response.message, 'success');
+        limparCamposCadastro();
+        setTimeout(() => {
+          mudarTela('screen-login');
+          alertBox.style.display = 'none';
+        }, 3000);
+      } else {
+        exibirAlertaCadastro(response.message, 'danger');
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.textContent = 'Cadastrar';
+      exibirAlertaCadastro('Erro de conexão ao cadastrar: ' + err.message, 'danger');
+    });
+}
+
+// Rotina de validação do código alfanumérico OTP no primeiro acesso
+function submeterCodigoOtpModal() {
+  const matricula = document.getElementById('hidden-otp-matricula').value;
+  const codigo = document.getElementById('input-modal-otp').value;
+  const modalAlert = document.getElementById('otp-modal-alert');
+  const btn = document.getElementById('btn-confirmar-otp');
+
+  if (!codigo) {
+    modalAlert.textContent = 'Por favor, insira o código OTP.';
+    modalAlert.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+  modalAlert.style.display = 'none';
+
+  // Consome a rota validarOtp no backend externo
+  dispararRequisicaoApi({ acao: 'validarOtp', matricula: matricula, codigo: codigo })
+    .then(response => {
+      btn.disabled = false;
+      btn.textContent = 'Validar Código';
+      
+      if (response.success) {
+        fecharModalOtp();
+        logarUsuarioNoPainel(response.usuario); // Realiza o login após sucesso do OTP
+      } else {
+        modalAlert.textContent = response.message;
+        modalAlert.style.display = 'block';
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.textContent = 'Validar Código';
+      modalAlert.textContent = 'Erro de comunicação no OTP: ' + err.message;
+      modalAlert.style.display = 'block';
+    });
+}
+
+function exibirAlertaCadastro(msg, tipo) {
+  const alertBox = document.getElementById('register-alert');
+  alertBox.textContent = msg;
+  alertBox.className = 'alert-msg ' + (tipo === 'danger' ? 'alert-danger' : 'alert-success');
+  alertBox.style.display = 'block';
+}
+
+function limparCamposCadastro() {
+  document.getElementById('reg-nome').value = '';
+  document.getElementById('reg-matricula').value = '';
+  document.getElementById('reg-email').value = '';
+  document.getElementById('reg-empresa').value = '';
+  document.getElementById('reg-regional').value = '';
+  document.getElementById('reg-senha').value = '';
+  document.getElementById('reg-senha2').value = '';
+}
+
+function fecharModalOtp() {
+  document.getElementById('otp-modal').style.display = 'none';
+}
+
+  // --- JAVASCRIPT PARTE 3: PAINEL PRINCIPAL & FUNÇÕES DE WAREHOUSE VIA API ---
+
+// 1. Inicializa o Painel Principal buscando os filtros exclusivos do servidor do Google
+function carregarDadosIniciaisPainel() {
+  const containerLista = document.getElementById('lista-romaneios-corpo');
+  containerLista.innerHTML = '<p style="text-align: center; color: #888; margin-top: 20px;">Carregando dados da warehouse...</p>';
+
+  dispararRequisicaoApi({ acao: 'carregarFiltros' })
+    .then(response => {
+      if (response.success) {
+        popularDropdown('filtro-fornecedor', response.fornecedores);
+        popularDropdown('filtro-transportador', response.transportadores);
+        popularDropdown('filtro-romaneio', response.romaneios);
+      }
+      // Puxa a lista de romaneios pendentes logo em seguida
+      atualizarListaRomaneiosServidor();
+    })
+    .catch(err => {
+      containerLista.innerHTML = '<p style="text-align: center; color: red; margin-top: 20px;">Erro ao carregar filtros iniciais.</p>';
+    });
+}
+
+function popularDropdown(idElemento, listaItens) {
+  const select = document.getElementById(idElemento);
+  select.innerHTML = '<option value="Todos">Todos</option>';
+  listaItens.forEach(item => {
+    if (item) {
+      const opt = document.createElement('option');
+      opt.value = item;
+      opt.textContent = item;
+      select.appendChild(opt);
     }
+  });
+}
 
-    // 3. Renderiza os itens dinamicamente com checkbox na coluna central
-    function renderizarListaRomaneios(lista) {
-      const container = document.getElementById('lista-romaneios-corpo');
-      document.getElementById('chk-selecionar-todos').checked = false; // Reseta o topo
+// 2. Busca os dados brutos de romaneios sem dispatch no Google Sheets
+function atualizarListaRomaneiosServidor() {
+  const filtrosEmBranco = { fornecedor: 'Todos', transportador: 'Todos', romaneio: 'Todos', buscaTexto: '' };
+  
+  dispararRequisicaoApi({ acao: 'buscarRomaneios', filtros: filtrosEmBranco })
+    .then(response => {
+      if (response.success) {
+        romaneiosGlobais = response.romaneios; // Cache em memória do navegador
+        renderizarListaRomaneios(romaneiosGlobais);
+      }
+    })
+    .catch(err => {
+      console.error("Erro ao puxar lista do servidor: ", err);
+    });
+}
 
-      if (lista.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #888; margin-top: 20px;">Nenhum romaneio pendente encontrado.</p>';
+// 3. Monta dinamicamente a estrutura de checkboxes na interface
+function renderizarListaRomaneios(lista) {
+  const container = document.getElementById('lista-romaneios-corpo');
+  document.getElementById('chk-selecionar-todos').checked = false;
+
+  if (lista.length === 0) {
+    container.innerHTML = '<p style="text-align: center; color: #888; margin-top: 20px;">Nenhum romaneio pendente encontrado.</p>';
+    return;
+  }
+
+  container.innerHTML = '';
+  lista.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'romaneio-item';
+    div.innerHTML = `
+      <input type="checkbox" class="chk-romaneio" value="${item.romaneio}" id="chk-${item.romaneio}">
+      <label for="chk-${item.romaneio}" style="cursor:pointer; width:100%;">
+        <strong>${item.romaneio}</strong> <br>
+        <span style="font-size:11px; color:#777;">Forn: ${item.fornecedor} | Transp: ${item.transportador}</span>
+      </label>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// 4. Mecanismo de filtros locais instantâneos (Sem requisição HTTP extra para máxima performance)
+function filtrarListaLocal() {
+  const fornecedorSel = document.getElementById('filtro-fornecedor').value;
+  const transportadorSel = document.getElementById('filtro-transportador').value;
+  const romaneioSel = document.getElementById('filtro-romaneio').value;
+  const buscaTexto = document.getElementById('busca-central').value.toLowerCase();
+
+  const listaFiltrada = romaneiosGlobais.filter(item => {
+    if (fornecedorSel !== 'Todos' && item.fornecedor !== fornecedorSel) return false;
+    if (transportadorSel !== 'Todos' && item.transportador !== transportadorSel) return false;
+    if (romaneioSel !== 'Todos' && item.romaneio !== romaneioSel) return false;
+    if (buscaTexto && !item.romaneio.toLowerCase().includes(buscaTexto)) return false;
+    return true;
+  });
+
+  renderizarListaRomaneios(listaFiltrada);
+}
+
+function alternarTodosCheckboxes(master) {
+  const checkboxes = document.querySelectorAll('.chk-romaneio');
+  checkboxes.forEach(chk => chk.checked = master.checked);
+}
+
+function resetarFiltros() {
+  document.getElementById('filtro-fornecedor').value = 'Todos';
+  document.getElementById('filtro-transportador').value = 'Todos';
+  document.getElementById('filtro-romaneio').value = 'Todos';
+  document.getElementById('busca-central').value = '';
+  renderizarListaRomaneios(romaneiosGlobais);
+}
+
+// 5. Copiar os números dos romaneios marcados
+function copiarSelecao() {
+  const selecionados = obterRomaneiosSelecionados();
+  if (selecionados.length === 0) {
+    alert('Selecione pelo menos um romaneio para copiar.');
+    return;
+  }
+  const textoParaCopiar = selecionados.join(', ');
+  navigator.clipboard.writeText(textoParaCopiar).then(() => {
+    alert('Copiado para a área de transferência: ' + textoParaCopiar);
+  });
+}
+
+// 6. Confirma o Dispatch enviando o lote e os dados do usuário para auditoria da aba LOGS
+function confirmarDispatchSelecionados() {
+  const selecionados = obterRomaneiosSelecionados();
+  if (selecionados.length === 0) {
+    alert('Por favor, selecione ao menos um romaneio para o dispatch.');
+    return;
+  }
+
+  if (!confirm(`Deseja confirmar o dispatch de ${selecionados.length} romaneio(s)?`)) return;
+
+  dispararRequisicaoApi({ acao: 'confirmarDispatch', listaRomaneios: selecionados, usuario: usuarioLogado })
+    .then(response => {
+      if (response.success) {
+        alert(response.message);
+        carregarDadosIniciaisPainel(); // Reseta e atualiza a grid com o status atualizado da planilha
+      } else {
+        alert('Erro no servidor: ' + response.message);
+      }
+    })
+    .catch(err => {
+      alert('Erro de conexão ao processar dispatch: ' + err.message);
+    });
+}
+
+function obterRomaneiosSelecionados() {
+  const checkboxes = document.querySelectorAll('.chk-romaneio:checked');
+  let valores = [];
+  checkboxes.forEach(chk => valores.push(chk.value));
+  return valores;
+}
+
+// 7. Consulta individual de status e auditoria na coluna da direita
+function executarConsultaDireita() {
+  const romaneioBusca = document.getElementById('busca-consulta-direita').value;
+  const resultadoBox = document.getElementById('resultado-consulta-direita');
+
+  if (!romaneioBusca) {
+    alert('Digite o número do romaneio para consultar.');
+    return;
+  }
+
+  resultadoBox.style.display = 'block';
+  resultadoBox.innerHTML = 'Buscando histórico...';
+  resultadoBox.style.background = '#f1f3f5';
+
+  dispararRequisicaoApi({ acao: 'consultarDispatch', romaneioBusca: romaneioBusca })
+    .then(response => {
+      if (!response.success || !response.encontrado) {
+        resultadoBox.innerHTML = `❌ Romaneio não localizado ou erro na base.`;
+        resultadoBox.style.background = '#fde8e8';
         return;
       }
 
-      container.innerHTML = '';
-      lista.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'romaneio-item';
-        div.innerHTML = `
-          <input type="checkbox" class="chk-romaneio" value="${item.romaneio}" id="chk-${item.romaneio}">
-          <label for="chk-${item.romaneio}" style="cursor:pointer; width:100%;">
-            <strong>${item.romaneio}</strong> <br>
-            <span style="font-size:11px; color:#777;">Forn: ${item.fornecedor} | Transp: ${item.transportador}</span>
-          </label>
+      if (response.dados.status === 'DESPACHADO') {
+        resultadoBox.style.background = '#def7ec';
+        resultadoBox.innerHTML = `
+          <strong style="color:#03543f;">✓ STATUS: DESPACHADO</strong><br>
+          <strong>Romaneio:</strong> ${response.dados.romaneio}<br>
+          <strong>Fornecedor:</strong> ${response.dados.fornecedor}<br>
+          <strong>Transp:</strong> ${response.dados.transportador}
         `;
-        container.appendChild(div);
-      });
-    }
-
-    // 4. Filtros instantâneos (Roda local na memória, deixando o app extremamente rápido)
-    function filtrarListaLocal() {
-      const fornecedorSel = document.getElementById('filtro-fornecedor').value;
-      const transportadorSel = document.getElementById('filtro-transportador').value;
-      const romaneioSel = document.getElementById('filtro-romaneio').value;
-      const buscaTexto = document.getElementById('busca-central').value.toLowerCase();
-
-      const listaFiltrada = romaneiosGlobais.filter(item => {
-        if (fornecedorSel !== 'Todos' && item.fornecedor !== fornecedorSel) return false;
-        if (transportadorSel !== 'Todos' && item.transportador !== transportadorSel) return false;
-        if (romaneioSel !== 'Todos' && item.romaneio !== romaneioSel) return false;
-        if (buscaTexto && !item.romaneio.toLowerCase().includes(buscaTexto)) return false;
-        return true;
-      });
-
-      renderizarListaRomaneios(listaFiltrada);
-    }
-
-    // Alternar a seleção de todas as caixas de uma vez
-    function alternarTodosCheckboxes(master) {
-      const checkboxes = document.querySelectorAll('.chk-romaneio');
-      checkboxes.forEach(chk => chk.checked = master.checked);
-    }
-
-    function resetarFiltros() {
-      document.getElementById('filtro-fornecedor').value = 'Todos';
-      document.getElementById('filtro-transportador').value = 'Todos';
-      document.getElementById('filtro-romaneio').value = 'Todos';
-      document.getElementById('busca-central').value = '';
-      renderizarListaRomaneios(romaneiosGlobais);
-    }
-
-    // 5. Copiar para a área de transferência a lista de romaneios marcados
-    function copiarSelecao() {
-      const selecionados = obterRomaneiosSelecionados();
-      if (selecionados.length === 0) {
-        alert('Selecione pelo menos um romaneio para copiar.');
-        return;
+      } else {
+        resultadoBox.style.background = '#fef08a';
+        resultadoBox.innerHTML = `
+          <strong style="color:#854d0e;">⏳ STATUS: PENDENTE</strong><br>
+          <strong>Romaneio:</strong> ${response.dados.romaneio}<br>
+          <strong>Fornecedor:</strong> ${response.dados.fornecedor}<br>
+          <strong>Transp:</strong> ${response.dados.transportador}
+        `;
       }
-      const textoParaCopiar = selecionados.join(', ');
-      navigator.clipboard.writeText(textoParaCopiar).then(() => {
-        alert('Romaneios copiados com sucesso: ' + textoParaCopiar);
-      });
-    }
+    })
+    .catch(err => {
+      resultadoBox.innerHTML = `⚠️ Erro de conexão com a API.`;
+      resultadoBox.style.background = '#fde8e8';
+    });
+}
 
-    // 6. Confirma o Dispatch em lote na planilha e gera os logs de auditoria
-    function confirmarDispatchSelecionados() {
-      const selecionados = obterRomaneiosSelecionados();
-      if (selecionados.length === 0) {
-        alert('Por favor, selecione ao menos um romaneio para o dispatch.');
-        return;
-      }
-
-      if (!confirm(`Deseja confirmar o dispatch de ${selecionados.length} romaneio(s)?`)) return;
-
-      google.script.run
-        .withSuccessHandler(function(response) {
-          if (response.success) {
-            alert(response.message);
-            carregarDadosIniciaisPainel(); // Recarrega tudo atualizado da planilha
-          } else {
-            alert('Erro: ' + response.message);
-          }
-        })
-        .confirmarDispatch(selecionados, usuarioLogado);
-    }
-
-    function obterRomaneiosSelecionados() {
-      const checkboxes = document.querySelectorAll('.chk-romaneio:checked');
-      let valores = [];
-      checkboxes.forEach(chk => valores.push(chk.value));
-      return valores;
-    }
-
-    // 7. COLUNA DIREITA: Consultar status atualizado e histórico de logs de um romaneio
-    function ejecutarConsultaDireita() {
-      const romaneioBusca = document.getElementById('busca-consulta-direita').value;
-      const resultadoBox = document.getElementById('resultado-consulta-direita');
-
-      if (!romaneioBusca) {
-        alert('Digite o número do romaneio para consultar.');
-        return;
-      }
-
-      resultadoBox.style.display = 'block';
-      resultadoBox.innerHTML = 'Buscando histórico...';
-      resultadoBox.style.background = '#f1f3f5';
-
-      google.script.run
-        .withSuccessHandler(function(response) {
-          if (!response.success) {
-            resultadoBox.innerHTML = `⚠️ ${response.message}`;
-            resultadoBox.style.background = '#fde8e8';
-            return;
-          }
-
-          if (!response.encontrado) {
-            resultadoBox.innerHTML = `❌ Romaneio não localizado na base.`;
-            resultadoBox.style.background = '#fde8e8';
-            return;
-          }
-
-          if (response.dados.status === 'DESPACHADO') {
-            resultadoBox.style.background = '#def7ec';
-            resultadoBox.innerHTML = `
-              <strong style="color:#03543f;">✓ STATUS: DESPACHADO</strong><br>
-              <strong>Romaneio:</strong> ${response.dados.romaneio}<br>
-              <strong>Fornecedor:</strong> ${response.dados.fornecedor}<br>
-              <strong>Transp:</strong> ${response.dados.transportador}
-            `;
-          } else {
-            resultadoBox.style.background = '#fef08a';
-            resultadoBox.innerHTML = `
-              <strong style="color:#854d0e;">⏳ STATUS: PENDENTE</strong><br>
-              <strong>Romaneio:</strong> ${response.dados.romaneio}<br>
-              <strong>Fornecedor:</strong> ${response.dados.fornecedor}<br>
-              <strong>Transp:</strong> ${response.dados.transportador}
-            `;
-          }
-        })
-        .consultarDispatchRealizado(romaneioBusca);
-    }
-
-        // --- FUNÇÕES DE CONTROLE DO MODAL DE SUPORTE ---
-    function abrirModalSuporte(event) {
-      if(event) event.preventDefault(); // Previne comportamento de recarregar a página
-      document.getElementById('modalSuporte').style.display = 'flex';
-    }
-
-    function fecharModalSuporte() {
-      document.getElementById('modalSuporte').style.display = 'none';
-    }
-
-    function fecharAoClicarFora(event) {
-      // Se clicar no fundo escuro (fora do card), fecha o modal
-      if (event.target.id === 'modalSuporte') {
-        fecharModalSuporte();
-      }
-    }
-   
+// --- FIM DO ECOSSISTEMA SMART CARGAS ---
+  
   </script>
 </body>
 </html>
