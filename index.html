@@ -328,7 +328,7 @@
 <div id="screen-login" class="screen" style="display: flex; flex-direction: column;">
       <div class="auth-wrapper">
         <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/" alt="SmartCargas VIVO" class="brand-logo">
-        <p class="brand-subtitle">Painel - Demanda Dispatch v1707.12</p>
+        <p class="brand-subtitle">Painel - Demanda Dispatch v1707.13</p>
         
         <div id="login-alert" class="alert-msg alert-danger"></div>
         
@@ -432,7 +432,7 @@
     <!-- TELA 3: PAINEL PRINCIPAL (MAIN) -->
     <div id="screen-main" class="screen" style="display: none; padding: 0;">
      
-      <!-- HEADER DO SISTEMA (CORRIGIDO) -->
+      <!-- HEADER DO SISTEMA -->
       <div class="main-header">
         <div class="logo-area">
           <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/" alt="SmartCargas VIVO" class="header-logo-img">
@@ -449,7 +449,7 @@
       <!-- GRID DE GERENCIAMENTO (3 COLUNAS) -->
       <div class="panel-grid">
         
-        <!-- COLUNA ESQUERDA ATUALIZADA: FILTROS EM CASCATA -->
+        <!-- COLUNA ESQUERDA: FILTROS EM CASCATA -->
         <div class="panel-card">
           <div class="card-title">Filtros de Seleção</div>
           
@@ -474,11 +474,9 @@
             </select>
           </div>
           
-          <!-- CORREÇÃO 3: Botão compacto em vez de bloco gigante ocupando o espaço -->
           <button class="btn-secondary" style="margin-top: 15px; padding: 10px; font-size: 13px; font-weight: 500;" onclick="resetarFiltros()">Limpar Filtros</button>
         </div>
 
-        
         <!-- COLUNA CENTRAL: GESTÃO DE PEDIDOS -->
         <div class="panel-card">
           <div class="card-title">Pedidos sem Dispatch (Pendentes)</div>
@@ -487,13 +485,11 @@
             <input type="text" id="busca-central" class="form-control" placeholder="🔍 Buscar por número de romaneio..." oninput="filtrarListaLocal()">
           </div>
           
-          <!-- Item para selecionar todos de uma vez -->
           <div class="romaneio-item" style="background: #e9ecef; border-radius: 8px; margin-bottom: 8px; font-weight: 600;">
             <input type="checkbox" id="chk-selecionar-todos" onchange="alternarTodosCheckboxes(this)">
             <label for="chk-selecionar-todos" style="cursor:pointer; width:100%;">Selecionar Todos</label>
           </div>
           
-          <!-- Lista alimentada dinamicamente -->
           <div class="romaneio-list-container" id="lista-romaneios-corpo">
             <p style="text-align: center; color: #888; margin-top: 20px;">Nenhum romaneio carregado.</p>
           </div>
@@ -513,17 +509,16 @@
           <div class="search-box-wrapper">
             <input type="text" id="busca-consulta-direita" class="form-control" placeholder="Digite o número do Romaneio">
           </div>
-          <!-- CORREÇÃO 3: Botão compactado sem quebrar harmonia visual Nu-style -->
           <button class="btn-secondary" style="width: 100%; padding: 10px; font-size: 13px; font-weight: 500;" onclick="executarConsultaDireita()">Consultar Status</button>
           
           <div id="resultado-consulta-direita" class="result-box"></div>
         </div>
         
-      </div>
-    </div>
+      </div> <!-- Fim da panel-grid -->
+    </div> <!-- Fim da screen-main -->
 
-    
-  </div>
+  </div> <!-- Fim da app-container (Fechando o bloco que engloba as 3 telas) -->
+
 
   <!-- MODAL DE VALIDAÇÃO OTP (SÓ APARECE NO PRIMEIRO LOGIN) -->
   <div id="otp-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; padding: 15px;">
@@ -544,13 +539,13 @@
     </div>
   </div>
 
-  
-  <!-- Modal Suporte Completo - Nu-Style com Dados Visíveis -->
-<div id="modalSuporte" class="modal-suporte" style="display: none;" onclick="fecharAoClicarFora(event)">
+
+  <!-- MODAL SUPORTE COMPLETO - NU-STYLE COM DADOS VISÍVEIS -->
+  <div id="modalSuporte" class="modal-suporte" style="display: none;" onclick="fecharAoClicarFora(event)">
     <div class="modal-suporte-content" onclick="event.stopPropagation()">
         
         <div class="nu-icon-badge">
-            <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/" alt="Logo" class="nu-badge-img">
+          <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/" alt="Logo" class="nu-badge-img">
         </div>
 
         <h3 style="color:#333; font-size:18px;">Contatar Administradores</h3>
@@ -566,31 +561,10 @@
                     <span>📧 marcos.asouza@telefonica.com</span>
                 </div>
                 <div class="admin-actions">
-                    <a href="https://wa.me" target="_blank" class="nu-btn nu-zap">
-                        💬 WhatsApp
-                    </a>
-                    <a href="mailto:marcos.asouza@telefonica.com" class="nu-btn nu-mail">
-                        📧 E-mail
-                    </a>
+                    <a href="https://wa.me" target="_blank" class="nu-btn nu-zap">💬 WhatsApp</a>
+                    <a href="mailto:marcos.asouza@telefonica.com" class="nu-btn nu-mail">📧 E-mail</a>
                 </div>
             </div>
-
-              <!-- Administrador 2: Pendente -->
-           <!--  <div class="admin-card">
-                <span class="admin-title">🛡️ Bruno Felipe</span>
-                <div class="admin-info-text">
-                    <span>📱 (41) 99135-1291</span>
-                    <span>📧 brunof.oliveira@telefonica.com</span>
-                </div>
-                <div class="admin-actions">
-                    <a href="https://wa.me." target="_blank" class="nu-btn nu-zap">
-                        💬 WhatsApp
-                    </a>
-                    <a href="mailto:brunof.oliveira@telefonica.com" class="nu-btn nu-mail">
-                        📧 E-mail
-                    </a>
-                </div>
-            </div> -->
 
             <!-- Administrador 3: Walter Reichmuth -->
             <div class="admin-card">
@@ -600,12 +574,8 @@
                     <span>📧 walter.reichmuth@telefonica.com</span>
                 </div>
                 <div class="admin-actions">
-                    <a href="https://wa.me" target="_blank" class="nu-btn nu-zap">
-                        💬 WhatsApp
-                    </a>
-                    <a href="mailto:walter.reichmuth@telefonica.com" class="nu-btn nu-mail">
-                        📧 E-mail
-                    </a>
+                    <a href="https://wa.me" target="_blank" class="nu-btn nu-zap">💬 WhatsApp</a>
+                    <a href="mailto:walter.reichmuth@telefonica.com" class="nu-btn nu-mail">📧 E-mail</a>
                 </div>
             </div>
 
@@ -613,7 +583,8 @@
 
         <button onclick="fecharModalSuporte()" class="btn-fechar-modal">Voltar para o Login</button>
     </div>
-</div>
+  </div>
+
  
   
   <script>
