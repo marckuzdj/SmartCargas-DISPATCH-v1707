@@ -3,329 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DISPATCH | SmartCargas</title>
-  <!-- Link do Google Fonts para uma tipografia limpa e moderna -->
-  <!--<link href="https://googleapis.com" rel="stylesheet"> -->
+  <title>Smart Cargas - Sistema Logístico</title>
+  <link href="https://googleapis.com" rel="stylesheet">
   
   <style>
-    /* --- CONFIGURAÇÕES GERAIS & DESIGN ROXO/NU-STYLE --- */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', sans-serif;
-    }
-    body {
-      background-color: #f4f5f7;
-      color: #333;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 15px;
-    }
-    .app-container {
-      width: 100%;
-      max-width: 1200px;
-      background: #ffffff;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-      overflow: hidden;
-      min-height: 550px;
-      display: flex;
-      flex-direction: column;
-    }
-    .screen {
-      display: none !important; /* Força todas as telas a ficarem invisíveis por padrão */
-      padding: 30px;
-      flex-direction: column;
-      flex: 1;
-    }
-    .screen.active {
-      display: flex !important; /* Mostra APENAS a tela que tiver a classe 'active' */
-    }
-    
-    /* --- ESTILOS DE FORMULÁRIO (PADRÃO DO PRINT REF) --- */
-    .auth-wrapper {
-      max-width: 400px;
-      width: 100%;
-      margin: auto;
-      text-align: center;
-    }
-    .brand-title {
-      font-size: 28px;
-      font-weight: 700;
-      color: #8A05BE; /* Roxo Vivo/Nu de referência */
-      margin-bottom: 8px;
-    }
-    .brand-subtitle {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 30px;
-    }
-    .form-group {
-      text-align: left;
-      margin-bottom: 20px;
-    }
-    .form-group label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: #444;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .form-control {
-      width: 100%;
-      padding: 14px 16px;
-      font-size: 14px;
-      border: 1px solid #ddd;
-      border-radius: 12px; /* Cantos bem arredondados como na Ref */
-      background-color: #fafafa;
-      transition: all 0.3s ease;
-      outline: none;
-    }
-    .form-control:focus {
-      border-color: #8A05BE;
-      background-color: #fff;
-      box-shadow: 0 0 0 3px rgba(138, 5, 190, 0.1);
-    }
-    .btn-primary {
-      width: 100%;
-      padding: 14px;
-      font-size: 16px;
-      font-weight: 600;
-      color: #fff;
-      background-color: #8A05BE; /* Botão Roxo Destacado */
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      margin-top: 10px;
-    }
-    .btn-primary:hover {
-      background-color: #70049E;
-    }
-    .auth-footer {
-      margin-top: 25px;
-      font-size: 13px;
-      color: #666;
-    }
-    .auth-footer a {
-      color: #8A05BE;
-      text-decoration: none;
-      font-weight: 500;
-    }
-    .auth-footer a:hover {
-      text-decoration: underline;
-    }
-    .alert-msg {
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      margin-bottom: 15px;
-      display: none;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background-color: #f4f5f7; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; }
+    .app-container { width: 100%; max-width: 1200px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow: hidden; min-height: 550px; display: flex; flex-direction: column; }
+    .screen { padding: 30px; flex-direction: column; flex: 1; }
+    .auth-wrapper { max-width: 400px; width: 100%; margin: auto; text-align: center; }
+    .brand-logo { max-width: 180px; height: auto; display: block; margin: 0 auto 15px auto; }
+    .brand-subtitle { font-size: 14px; color: #666; margin-bottom: 30px; }
+    .form-group { text-align: left; margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: #444; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-control { width: 100%; padding: 14px 16px; font-size: 14px; border: 1px solid #ddd; border-radius: 12px; background-color: #fafafa; transition: all 0.3s ease; outline: none; }
+    .form-control:focus { border-color: #8A05BE; background-color: #fff; box-shadow: 0 0 0 3px rgba(138, 5, 190, 0.1); }
+    .btn-primary { width: 100%; padding: 14px; font-size: 16px; font-weight: 600; color: #fff; background-color: #8A05BE; border: none; border-radius: 12px; cursor: pointer; transition: background 0.3s ease; margin-top: 10px; }
+    .btn-primary:hover { background-color: #70049E; }
+    .auth-footer { margin-top: 25px; font-size: 13px; color: #666; }
+    .auth-footer a { color: #8A05BE; text-decoration: none; font-weight: 500; }
+    .auth-footer a:hover { text-decoration: underline; }
+    .alert-msg { padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; display: none; }
     .alert-danger { background-color: #fde8e8; color: #e02424; }
     .alert-success { background-color: #def7ec; color: #03543f; }
-
-
-      /* --- ESTILOS ADICIONAIS DO PAINEL PRINCIPAL (TELA 3) --- */
-    .main-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 30px;
-      background: #8A05BE;
-      color: white;
-      border-radius: 16px 16px 0 0;
-    }
-    .main-header .logo-area h2 {
-      font-size: 22px;
-      font-weight: 700;
-    }
-    .main-header .logo-area span {
-      font-size: 12px;
-      opacity: 0.8;
-    }
-    .user-info-bar {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      font-size: 14px;
-    }
-    .btn-logout {
-      background: rgba(255,255,255,0.2);
-      border: 1px solid rgba(255,255,255,0.4);
-      padding: 8px 14px;
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
+    .main-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: #8A05BE; color: white; border-radius: 16px 16px 0 0; }
+    .header-logo-img { max-width: 140px; height: auto; display: inline-block; vertical-align: middle; }
+    .main-header .logo-area span { font-size: 12px; opacity: 0.8; margin-left: 10px; }
+    .user-info-bar { display: flex; align-items: center; gap: 20px; font-size: 14px; }
+    .btn-logout { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); padding: 8px 14px; color: white; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
     .btn-logout:hover { background: rgba(255,255,255,0.3); }
-    
-    /* Layout de 3 colunas responsivo */
-    .panel-grid {
-      display: grid;
-      grid-template-columns: 280px 1fr 280px;
-      gap: 20px;
-      padding: 20px;
-      flex: 1;
-      background: #f8f9fa;
-    }
-    .panel-card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-      display: flex;
-      flex-direction: column;
-    }
-    .card-title {
-      font-size: 14px;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: #555;
-      margin-bottom: 15px;
-      border-bottom: 2px solid #f1f1f1;
-      padding-bottom: 6px;
-    }
-    
-    /* Lista de Romaneios Central */
-    .search-box-wrapper {
-      position: relative;
-      margin-bottom: 15px;
-    }
-    .romaneio-list-container {
-      flex: 1;
-      overflow-y: auto;
-      max-height: 350px;
-      border: 1px solid #eee;
-      border-radius: 8px;
-      padding: 10px;
-      background: #fafafa;
-    }
-    .romaneio-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px;
-      border-bottom: 1px solid #eee;
-      font-size: 14px;
-    }
+    .panel-grid { display: grid; grid-template-columns: 280px 1fr 280px; gap: 20px; padding: 20px; flex: 1; background: #f8f9fa; }
+    .panel-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); display: flex; flex-direction: column; }
+    .card-title { font-size: 14px; font-weight: 700; text-transform: uppercase; color: #555; margin-bottom: 15px; border-bottom: 2px solid #f1f1f1; padding-bottom: 6px; }
+    .search-box-wrapper { position: relative; margin-bottom: 15px; }
+    .romaneio-list-container { flex: 1; overflow-y: auto; max-height: 350px; border: 1px solid #eee; border-radius: 8px; padding: 10px; background: #fafafa; }
+    .romaneio-item { display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
     .romaneio-item:last-child { border-bottom: none; }
-    .romaneio-item input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: #8A05BE;
-      cursor: pointer;
-    }
-    .actions-row {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-    }
-    .btn-secondary {
-      background: #e9ecef;
-      color: #495057;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      flex: 1;
-      transition: background 0.2s;
-    }
+    .romaneio-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: #8A05BE; cursor: pointer; }
+    .actions-row { display: flex; gap: 10px; margin-top: 15px; }
+    .btn-secondary { background: #e9ecef; color: #495057; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; flex: 1; transition: background 0.2s; }
     .btn-secondary:hover { background: #dee2e6; }
-    
-    /* Painel Direita - Consultas */
-    .btn-monitor {
-      background: #00E676; /* Verde neon / destaque para monitorar */
-      color: #004D40;
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-bottom: 20px;
-    }
+    .btn-monitor { background: #00E676; color: #004D40; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; width: 100%; }
     .btn-monitor:hover { background: #00C853; }
-    .result-box {
-      margin-top: 15px;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      background: #f1f3f5;
-      display: none;
-    }
-
-    /* Responsividade para Tablets e Mobiles */
-    @media (max-width: 992px) {
-      .panel-grid { grid-template-columns: 1fr; }
-      .main-header { flex-direction: column; gap: 15px; text-align: center; }
-      .user-info-bar { flex-direction: column; gap: 8px; }
-    }
-
-        /* --- CLASSE PARA REDIMENSIONAR O LOGO BASE64 --- */
-    .brand-logo {
-      max-width: 180px; /* Ajuste o tamanho máximo conforme seu print */
-      height: auto;
-      display: block;
-      margin: 0 auto 15px auto; /* Centraliza nas telas de login/cadastro */
-    }
-    .header-logo-img {
-      max-width: 140px; /* Ajuste para o tamanho do cabeçalho */
-      height: auto;
-      display: inline-block;
-      vertical-align: middle;
-    }
-
-        /* --- ESTILOS DO MODAL DE SUPORTE NU-STYLE --- */
-    .modal-suporte {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
-      display: flex; justify-content: center; align-items: center; z-index: 2000;
-    }
-    .modal-suporte-content {
-      background: white; border-radius: 16px; padding: 25px;
-      max-width: 450px; width: 100%; text-align: center;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-    }
+    .result-box { margin-top: 15px; padding: 12px; border-radius: 8px; font-size: 13px; background: #f1f3f5; display: none; }
+    .modal-suporte { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+    .modal-suporte-content { background: white; border-radius: 16px; padding: 25px; max-width: 450px; width: 100%; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
     .nu-icon-badge { margin-bottom: 15px; }
     .nu-badge-img { max-width: 90px; height: auto; border-radius: 50%; }
     .nu-subtitle { font-size: 13px; color: #666; margin-bottom: 20px; }
-    .suporte-links-container {
-      display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;
-    }
-    .admin-card {
-      background: #fafafa; border: 1px solid #eee; border-radius: 12px;
-      padding: 12px; text-align: left;
-    }
+    .suporte-links-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+    .admin-card { background: #fafafa; border: 1px solid #eee; border-radius: 12px; padding: 12px; text-align: left; }
     .admin-title { font-size: 14px; font-weight: 700; color: #8A05BE; display: block; margin-bottom: 6px; }
     .admin-info-text { font-size: 12px; color: #555; display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
     .admin-actions { display: flex; gap: 10px; }
-    .nu-btn {
-      flex: 1; text-align: center; padding: 8px; font-size: 12px; font-weight: 600;
-      text-decoration: none; border-radius: 8px; transition: opacity 0.2s;
-    }
+    .nu-btn { flex: 1; text-align: center; padding: 8px; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 8px; transition: opacity 0.2s; }
     .nu-btn:hover { opacity: 0.8; }
     .nu-zap { background: #25D366; color: white; }
     .nu-mail { background: #e9ecef; color: #333; }
-    .btn-fechar-modal {
-      width: 100%; padding: 12px; font-size: 14px; font-weight: 600;
-      color: #fff; background-color: #8A05BE; border: none; border-radius: 12px; cursor: pointer;
-    }
-
-    
+    .btn-fechar-modal { width: 100%; padding: 12px; font-size: 14px; font-weight: 600; color: #fff; background-color: #8A05BE; border: none; border-radius: 12px; cursor: pointer; }
+    @media (max-width: 992px) { .panel-grid { grid-template-columns: 1fr; } .main-header { flex-direction: column; gap: 15px; text-align: center; } .user-info-bar { flex-direction: column; gap: 8px; } }
   </style>
 </head>
 <body>
-
   <div class="app-container">
-    
-    <!-- TELA 1: LOGIN -->
-    <!-- TELA 1: LOGIN -->
-<div id="screen-login" class="screen" style="display: flex; flex-direction: column;">
+        <!-- TELA 1: LOGIN -->
+    <div id="screen-login" class="screen" style="display: flex; flex-direction: column;">
       <div class="auth-wrapper">
         <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/" alt="SmartCargas VIVO" class="brand-logo">
         <p class="brand-subtitle">Painel - Demanda Dispatch v1707.13</p>
@@ -351,10 +93,9 @@
       </div>
     </div>
 
-    <!-- AS OUTRAS TELAS SERÃO ENCAIXADAS AQUI ABAIXO NOS PRÓXIMOS PASSOS -->
     <!-- TELA 2: CADASTRO DE USUÁRIO -->
     <div id="screen-register" class="screen" style="display: none; flex-direction: column;">
-      <div class="auth-wrapper" style="max-width: 500px;"> <!-- Um pouco mais larga para acomodar melhor os campos -->
+      <div class="auth-wrapper" style="max-width: 500px;">
         <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/" alt="SmartCargas VIVO" class="brand-logo">
         <p class="brand-subtitle">Criar Novo Acesso</p>
         
@@ -389,23 +130,10 @@
           <div class="form-group" style="flex: 1; margin-bottom: 0;">
             <label>Regional</label>
             <select id="reg-regional" class="form-control">
-                    <option value="" disabled selected>Selecione ...</option>
-                    <!-- <option value="AL/ALW1">AL/ALW1</option> -->
-                    <!-- <option value="BA/BAW1">BA/BAW1</option> -->
-                    <!-- <option value="CE/CEW1">CE/CEW1</option> -->
-                    <!-- <option value="ES/ESW1">ES/ESW1</option> -->
-                    <!-- <option value="MG/MNW5">MG/MNW5</option> -->
-                    <!-- <option value="PB/PBW1">PB/PBW1</option> -->
-                    <option value="PR/PRW1">PR/PRW1</option>
-                    <!-- <option value="PE/PEW1">PE/PEW1</option> -->
-                    <!-- <option value="PI/PIW1">PI/PIW1</option> -->
-                    <!-- <option value="RJ/RJW5">RJ/RJW5</option> -->
-                    <!-- <option value="RN/RNW1">RN/RNW1</option> -->
-                    <option value="RS/RSW1">RS/RSW1</option>
-                    <option value="SC/SCW1">SC/SCW1</option>
-                    <!-- <option value="SP/SPW1">SP/SPW1</option> -->
-                    <!-- <option value="SP/DSP1">SP/DSP1</option> -->
-                    <!-- <option value="SE/SEW1">SE/SEW1</option> -->
+              <option value="" disabled selected>Selecione ...</option>
+              <option value="PR/PRW1">PR/PRW1</option>
+              <option value="RS/RSW1">RS/RSW1</option>
+              <option value="SC/SCW1">SC/SCW1</option>
             </select>
           </div>
         </div>
@@ -429,7 +157,7 @@
       </div>
     </div>
 
-    <!-- TELA 3: PAINEL PRINCIPAL (MAIN) -->
+        <!-- TELA 3: PAINEL PRINCIPAL (MAIN) -->
     <div id="screen-main" class="screen" style="display: none; padding: 0;">
      
       <!-- HEADER DO SISTEMA -->
@@ -517,75 +245,9 @@
       </div> <!-- Fim da panel-grid -->
     </div> <!-- Fim da screen-main -->
 
-  </div> <!-- Fim da app-container (Fechando o bloco que engloba as 3 telas) -->
+  </div> <!-- Fim da app-container (Fechamento mandatório do contêiner mestre) -->
 
 
-  <!-- MODAL DE VALIDAÇÃO OTP (SÓ APARECE NO PRIMEIRO LOGIN) -->
-  <div id="otp-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; padding: 15px;">
-    <div style="background: white; padding: 30px; border-radius: 16px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-      <h3 style="color: #8A05BE; font-size: 22px; margin-bottom: 10px;">Verificação de Segurança</h3>
-      <p style="font-size: 14px; color: #555; margin-bottom: 20px;">Identificamos que este é o seu primeiro acesso. Digite o código de 4 dígitos enviado para o seu e-mail corporativo.</p>
-      
-      <div id="otp-modal-alert" class="alert-msg alert-danger" style="margin-bottom: 15px;"></div>
-      
-      <div class="form-group" style="text-align: center;">
-        <input type="text" id="input-modal-otp" class="form-control" placeholder="EX: X7R2" max-length="4" style="text-align: center; font-size: 20px; letter-spacing: 4px; font-weight: bold; text-transform: uppercase;">
-      </div>
-      
-      <input type="hidden" id="hidden-otp-matricula">
-      
-      <button class="btn-primary" id="btn-confirmar-otp" onclick="submeterCodigoOtpModal()" style="margin-top: 10px;">Validar Código</button>
-      <button class="btn-secondary" onclick="fecharModalOtp()" style="margin-top: 10px; width: 100%;">Cancelar</button>
-    </div>
-  </div>
-
-
-  <!-- MODAL SUPORTE COMPLETO - NU-STYLE COM DADOS VISÍVEIS -->
-  <div id="modalSuporte" class="modal-suporte" style="display: none;" onclick="fecharAoClicarFora(event)">
-    <div class="modal-suporte-content" onclick="event.stopPropagation()">
-        
-        <div class="nu-icon-badge">
-          <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/" alt="Logo" class="nu-badge-img">
-        </div>
-
-        <h3 style="color:#333; font-size:18px;">Contatar Administradores</h3>
-        <p class="nu-subtitle">Escolha um dos nossos canais oficiais para suporte:</p>
-        
-        <div class="suporte-links-container">
-            
-            <!-- Administrador 1: Marcos Souza -->
-            <div class="admin-card">
-                <span class="admin-title">🛡️ Marcos Souza</span>
-                <div class="admin-info-text">
-                    <span>📱 (11) 97147-9377</span>
-                    <span>📧 marcos.asouza@telefonica.com</span>
-                </div>
-                <div class="admin-actions">
-                    <a href="https://wa.me" target="_blank" class="nu-btn nu-zap">💬 WhatsApp</a>
-                    <a href="mailto:marcos.asouza@telefonica.com" class="nu-btn nu-mail">📧 E-mail</a>
-                </div>
-            </div>
-
-            <!-- Administrador 3: Walter Reichmuth -->
-            <div class="admin-card">
-                <span class="admin-title">🛡️ Walter Reichmuth</span>
-                <div class="admin-info-text">
-                    <span>📱 (41) 98411-7987</span>
-                    <span>📧 walter.reichmuth@telefonica.com</span>
-                </div>
-                <div class="admin-actions">
-                    <a href="https://wa.me" target="_blank" class="nu-btn nu-zap">💬 WhatsApp</a>
-                    <a href="mailto:walter.reichmuth@telefonica.com" class="nu-btn nu-mail">📧 E-mail</a>
-                </div>
-            </div>
-
-        </div>
-
-        <button onclick="fecharModalSuporte()" class="btn-fechar-modal">Voltar para o Login</button>
-    </div>
-  </div>
-
- 
   
   <script>
 
